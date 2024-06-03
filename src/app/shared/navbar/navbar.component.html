@@ -1,0 +1,144 @@
+<nav class="relative py-4 flex justify-between items-center bg-white">
+  <a class="text-3xl font-bold leading-none" href="#">
+    <h1>Kori Man</h1>
+  </a>
+  <div class="lg:hidden">
+    <button (click)="toggleMenu()" class="navbar-burger flex items-center text-blue-600 p-3">
+      <svg class="block h-4 w-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <title>Mobile menu</title>
+        <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"></path>
+      </svg>
+    </button>
+  </div>
+  <ul class="hidden lg:flex lg:mx-auto lg:items-center lg:w-auto lg:space-x-6">
+    @for (link of navLinks; track link.label) {
+      <li>
+        <a [routerLink]="link.path"
+           class="text-sm text-gray-400 hover:text-gray-500"
+        >
+          {{ link.label }}
+        </a>
+      </li>
+    }
+    <li class="text-gray-300">
+      <svg class="w-4 h-4 current-fill" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+           xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M12 5v0m0 7v0m0 7v0m0-13a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        />
+      </svg>
+    </li>
+  </ul>
+  @if (loginService.isLoggedIn()) {
+    <div class="relative">
+      <button (click)="toggleMenu()"
+              class="relative z-10 block h-10 w-10 rounded-full overflow-hidden border-2 border-gray-600 focus:outline-none focus:border-white">
+        <img class="h-full w-full object-cover"
+             src="../../../assets/logos/amirich-logo.svg"
+             alt="Your avatar"
+        >
+      </button>
+      @if (menuOpen()) {
+        <div class="absolute right-0 mt-2 w-48 bg-gray-100 rounded-md overflow-hidden shadow-xl z-50">
+          <a [routerLink]="['/profile']"
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white"
+          >
+            Profile
+          </a>
+          @if (loginService.getUserType() === 'Employer') {
+            <a [routerLink]="['/my-posts']"
+               class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white">
+              My Posts
+            </a>
+            <a [routerLink]="['/create-post']"
+               class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white">
+              Create Post
+            </a>
+          }
+          <a (click)="logout()"
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white cursor-pointer"
+          >
+            Logout
+          </a>
+        </div>
+      }
+    </div>
+  } @else {
+    <a
+      class="hidden lg:inline-block lg:ml-auto lg:mr-3 py-2 px-6 bg-gray-50 hover:bg-gray-100 text-sm text-gray-900 font-bold rounded-xl transition duration-200"
+      routerLink="/login"
+    >
+      Sign In
+    </a>
+    <a
+      class="hidden lg:inline-block py-2 px-6 bg-blue-500 hover:bg-blue-600 text-sm text-white font-bold rounded-xl transition duration-200"
+      routerLink="/sign-up"
+    >
+      Sign Up
+    </a>
+  }
+</nav>
+
+<div [ngClass]="{'hidden': !menuOpen(), 'lg:hidden': true}" class="navbar-menu relative z-50">
+  <div (click)="toggleMenu()" class="navbar-backdrop fixed inset-0 bg-gray-800 opacity-25"></div>
+  <nav class="fixed top-0 left-0 bottom-0 flex flex-col w-5/6 max-w-sm py-6 px-6 bg-white border-r overflow-y-auto">
+    <div class="flex items-center mb-8">
+      <a class="mr-auto text-3xl font-bold leading-none" href="#">
+        <svg alt="logo" class="h-12" viewBox="0 0 10240 10240">
+          <!-- SVG Path -->
+        </svg>
+      </a>
+      <button (click)="toggleMenu()" class="navbar-close">
+        <svg class="h-6 w-6 text-gray-400 cursor-pointer hover:text-gray-500" fill="none" stroke="currentColor"
+             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+      </button>
+    </div>
+    <div>
+      <ul>
+        @for (link of navLinks; track link.label) {
+          <li class="mb-1">
+            <a [routerLink]="link.path"
+               class="block p-4 text-sm font-semibold text-gray-400 hover:bg-blue-50 hover:text-blue-600 rounded">{{ link.label }}</a>
+          </li>
+        }
+      </ul>
+    </div>
+    <div class="mt-auto">
+      @if (loginService.isLoggedIn()) {
+        <a [routerLink]="['/profile']"
+           class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white">Profile</a>
+        @if (loginService.getUserType() === 'Employer') {
+          <a [routerLink]="['/my-posts']"
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white">My Posts</a>
+          <a [routerLink]="['/create-post']"
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white">Create Post</a>
+        }
+        <a (click)="logout()"
+           class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white">
+          Logout
+        </a>
+      } @else {
+        <a
+          class="block px-4 py-3 mb-3 leading-loose text-xs text-center font-semibold leading-none bg-gray-50 hover:bg-gray-100 rounded-xl"
+          routerLink="/login">
+          Sign In
+        </a>
+        <a
+          class="block px-4 py-3 mb-2 leading-loose text-xs text-center text-white font-semibold bg-blue-600 hover:bg-blue-700 rounded-xl"
+          routerLink="/sign-up">
+          Sign Up
+        </a>
+      }
+      <p class="my-4 text-xs text-center text-gray-400">
+        <span>
+          Copyright © 2021
+        </span>
+      </p>
+    </div>
+  </nav>
+</div>
