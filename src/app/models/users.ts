@@ -1,5 +1,7 @@
 // Базовая модель для пользователя
 export interface User {
+  fullName: string;
+
   userId: number;
   email: string;
   phoneNo: string;
@@ -14,13 +16,11 @@ export interface User {
 
 // Модель для работодателя (физическое лицо)
 export interface Employer extends User {
-  fullName: string;
   logoURL?: string;
 }
 
 // Модель для специалиста
 export interface JobSeeker extends User {
-  fullName: string;
   experienceStatus: string;
   resumeURL: string;
   jobSeekerSkills: Skill[];

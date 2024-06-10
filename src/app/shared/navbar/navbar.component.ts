@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+
 import { RouterLink } from '@angular/router';
 import { NgClass, NgForOf, NgIf } from '@angular/common';
 import { LoginService } from '../../core/services/auth/login.service';
@@ -16,8 +17,8 @@ interface NavLink {
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent {
-  menuOpen = signal(false);
+export class NavbarComponent implements OnInit {
+  public loginService = inject(LoginService);
 
   navLinks: NavLink[] = [
     { path: '/home', label: 'Главная' },
@@ -26,8 +27,20 @@ export class NavbarComponent {
     { path: '/pricing', label: 'Pricing' },
     { path: '/contact', label: 'Contact' }
   ];
-  
-  public loginService = inject(LoginService);
+
+  menuOpen = signal(false);
+  isLoggedIn = computed(() => this.loginService.isLoggedIn());
+  userName = computed(() => this.loginService.currentUser()?.fullName || null);
+  userType = computed(() => this.loginService.currentUser()?.userType || null);
+  isLoading = computed(() => this.loginService.isLoading());
+
+  ngOnInit(): void {
+    if (this.isLoggedIn()) {
+      console.log('USER NAME', this.userName());
+    } else {
+      console.log('User is not logged in'); // Debug log
+    }
+  }
 
   public toggleMenu() {
     this.menuOpen.set(!this.menuOpen());

@@ -1,7 +1,8 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+
 import { environment } from '../../../../environment/environment';
 import { HttpClient } from '@angular/common/http';
-import { catchError, Observable } from 'rxjs';
+import { catchError, Observable, tap } from 'rxjs';
 import { User } from '../../../models/users';
 import { ErrorHandlerService } from './error-handler.service';
 import { Router } from '@angular/router';
@@ -11,15 +12,18 @@ import { CookieService } from 'ngx-cookie-service';
   providedIn: 'root'
 })
 export class LoginService {
-  private apiUrl = `${environment.apiUrl}api/auth`;
+  currentUser = signal<User | null>(null);
+  isLoggedIn = signal<boolean>(false);
+  isLoading = signal<boolean>(true); // Новый сигнал
 
+  private apiUrl = `${environment.apiUrl}api/auth`;
   private errorHandler = inject(ErrorHandlerService);
-  private cookieService: CookieService;
+  private cookieService = inject(CookieService);
   private router = inject(Router);
   private http = inject(HttpClient);
 
-  constructor(cookieService: CookieService) {
-    this.cookieService = cookieService;
+  constructor() {
+    this.loadUserFromToken();
   }
 
   public login(credentials: {
@@ -29,6 +33,12 @@ export class LoginService {
     return this.http
       .post<{ user: User; token: string }>(`${this.apiUrl}/login`, credentials)
       .pipe(
+        tap(response => {
+          this.setSession(response.token);
+          this.currentUser.set(response.user);
+          this.isLoggedIn.set(true);
+          this.isLoading.set(false); // Завершение загрузки
+        }),
         catchError(
           this.errorHandler.handleError<{ user: User; token: string }>('login')
         )
@@ -36,37 +46,61 @@ export class LoginService {
   }
 
   public logout(): void {
+    this.currentUser.set(null);
+    this.isLoggedIn.set(false);
     this.cookieService.delete('authToken');
     this.router.navigate(['/login']);
   }
 
   public setSession(token: string): void {
     this.cookieService.set('authToken', token);
+    this.loadUserFromToken(); // Загрузка пользователя после установки сессии
   }
 
   public getSession(): string | null {
     return this.cookieService.get('authToken');
   }
 
-  public isLoggedIn(): boolean {
-    return !!this.getSession();
-  }
-
-  public getUserType(): string | null {
+  public loadUserFromToken(): void {
     const token = this.getSession();
     if (token) {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userType;
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('Loaded user from token:', payload); // Debug log
+        this.fetchUserDetails(payload.userId);
+      } catch (error) {
+        console.error('Error parsing token payload:', error); // Debug log
+        this.currentUser.set(null);
+        this.isLoggedIn.set(false);
+        this.isLoading.set(false); // Завершение загрузки при ошибке
+      }
+    } else {
+      console.log('No token found in cookies'); // Debug log
+      this.currentUser.set(null);
+      this.isLoggedIn.set(false);
+      this.isLoading.set(false); // Завершение загрузки при отсутствии токена
     }
-    return null;
   }
 
   public getUserName(): string | null {
-    const token = this.getSession();
-    if (token) {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.fullName || null;  // Assuming the JWT contains a fullName field
-    }
-    return null;
+    return this.currentUser()?.fullName || null;
+  }
+
+  public getUserType(): string | null {
+    return this.currentUser()?.userType || null;
+  }
+
+  private fetchUserDetails(userId: string): void {
+    this.http
+      .get<User>(`${this.apiUrl}/user/${userId}`)
+      .pipe(
+        tap(user => {
+          this.currentUser.set(user);
+          this.isLoggedIn.set(true);
+          this.isLoading.set(false); // Завершение загрузки после получения данных пользователя
+        }),
+        catchError(this.errorHandler.handleError<User>('fetchUserDetails'))
+      )
+      .subscribe();
   }
 }

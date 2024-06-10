@@ -1,5 +1,4 @@
 import { Component, inject, signal } from '@angular/core';
-
 import { InputFieldComponent } from '../../../shared/input-field/input-field.component';
 import { HttpClientModule } from '@angular/common/http';
 import { NgClass, NgIf } from '@angular/common';
@@ -12,7 +11,7 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [InputFieldComponent, FormsModule, NgClass, NgIf, HttpClientModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
   loginFormData = signal<{ email: string; password: string }>({
@@ -30,7 +29,6 @@ export class LoginComponent {
       next: response => {
         console.log('Login successful', response);
         alert('Login successful');
-        this.loginService.setSession(response.token);
         this.router.navigate(['/home']);
       },
       error: (error: unknown) => {
